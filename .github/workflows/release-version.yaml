@@ -25,6 +25,11 @@ jobs:
           jq --arg version "$NEW_VERSION" '.version = $version' package.json > tmp.json && mv tmp.json package.json
           echo "version=$NEW_VERSION" >> $GITHUB_ENV
           echo "::set-output name=version::$NEW_VERSION"
+          
+      - name: Configura Git user
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
 
       - name: Commit e Tag della Nuova Versione
         run: |
