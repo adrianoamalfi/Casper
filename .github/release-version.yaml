@@ -1,0 +1,54 @@
+name: Release Custom Theme
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  versioning:
+    runs-on: ubuntu-22.04
+    outputs:
+      new_version: ${{ steps.versioning.outputs.version }}
+    
+    steps:
+      - name: Checkout del repository
+        uses: actions/checkout@v4
+
+      - name: Estrarre versione base e generare nuova versione custom
+        id: versioning
+        run: |
+          BASE_VERSION=$(jq -r .version package.json | cut -d. -f1-3)
+          CUSTOM_VERSION=$(jq -r .version package.json)
+          PATCH=$(echo "$CUSTOM_VERSION" | awk -F. '{print ($4+1)}')
+          NEW_VERSION="$BASE_VERSION.$PATCH"
+          jq --arg version "$NEW_VERSION" '.version = $version' package.json > tmp.json && mv tmp.json package.json
+          echo "version=$NEW_VERSION" >> $GITHUB_ENV
+          echo "::set-output name=version::$NEW_VERSION"
+
+      - name: Commit e Tag della Nuova Versione
+        run: |
+          git add package.json
+          git commit -m "Rilasciata versione custom ${{ steps.versioning.outputs.version }}" || echo "Nessuna modifica da commitare"
+          git tag -a "v${{ steps.versioning.outputs.version }}" -m "Versione ${{ steps.versioning.outputs.version }}"
+          git push origin main --tags
+
+  release:
+    needs: versioning
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout del repository
+        uses: actions/checkout@v4
+
+      - name: Creazione archivio ZIP
+        run: yarn zip
+
+      - name: Creazione Release su GitHub
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.versioning.outputs.new_version }}
+          name: "Rilascio v${{ needs.versioning.outputs.new_version }}"
+          draft: false
+          prerelease: false
+          files: "*.zip"

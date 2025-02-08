@@ -1,0 +1,34 @@
+name: Deploy Custom Theme
+
+on:
+  push:
+    branches:
+      - customizations
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout del repository
+        uses: actions/checkout@v4
+
+      - name: Installa dipendenze
+        uses: Borales/actions-yarn@v4
+        with:
+          cmd: install
+
+      - name: Esegui test
+        run: yarn test:ci
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout del repository
+        uses: actions/checkout@v4
+
+      - name: Effettua il deploy del tema
+        uses: TryGhost/action-deploy-theme@v1.6.6
+        with:
+          api-url: ${{ secrets.GHOST_ADMIN_API_URL }}
+          api-key: ${{ secrets.GHOST_ADMIN_API_KEY }}

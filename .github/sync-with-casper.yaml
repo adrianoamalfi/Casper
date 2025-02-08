@@ -1,0 +1,25 @@
+name: Sync with Casper
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # Ogni giorno alle 3 AM UTC
+  workflow_dispatch: # Possibilità di avviarlo manualmente
+
+jobs:
+  sync:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout del repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Aggiungere Casper come upstream
+        run: |
+          git remote add upstream https://github.com/TryGhost/Casper.git || true
+          git fetch upstream
+
+      - name: Aggiornare il branch main con Casper
+        run: |
+          git checkout main
