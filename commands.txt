@@ -1,0 +1,16 @@
+# Recupera gli aggiornamenti dall'upstream:
+git checkout main
+git fetch upstream
+git merge upstream/main
+
+#  Integra gli aggiornamenti nel tuo branch personalizzato:
+git checkout customizations
+git merge main
+
+# Risolvi eventuali conflitti e commit:
+git add .
+git commit -m "Risolti conflitti e aggiornato tema"
+git push origin customizations
+
+git config --global user.email "adrianoamalfi@gmail.com"
+git config --global user.name "Adriano Amalfi"
