@@ -1,0 +1,38 @@
+name: Auto PR from customizations to main
+
+on:
+  push:
+    branches:
+      - customizations
+  workflow_dispatch: # Consente di avviarlo manualmente
+
+jobs:
+  create-pull-request:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verificare se esiste già una PR aperta
+        id: check_pr
+        run: |
+          PR_EXISTS=$(gh pr list --base main --head customizations --state open --json number --jq '.[0].number' || echo "none")
+          if [ "$PR_EXISTS" != "none" ]; then
+            echo "exists=true" >> $GITHUB_ENV
+          else
+            echo "exists=false" >> $GITHUB_ENV
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Creare la Pull Request
+        if: env.exists == 'false'
+        run: |
+          gh pr create \
+            --base main \
+            --head customizations \
+            --title "Merge customizations into main" \
+            --body "Automated PR to merge the latest changes from customizations into main." \
+            --label "custom-release"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
